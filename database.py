@@ -64,17 +64,23 @@ def database_commit():
 	return 
 	
 #returns a list of all the entries for the given mac address
-def database_search_mac(mac, route):
-	database.execute("SELECT route,mac,ssid,rssi,lat,long,alt,time FROM log WHERE mac = ? AND route LIKE ?",(mac,route,))
+def database_search_location(route):
+	database.execute("SELECT timestamp, vehicle_id, vehicle_name, vehicle_route, vehicle_direction, vehicle_lat,	vehicle_lon, vehicle_bearing, vehicle_timestamp, vehicle_trip_start, vehicle_trip_id FROM vehicle WHERE vehicle_route = ?",(route,))
 	rows = database.fetchall()
 	return rows
 
-#returns a list of all mac addresses found	
-def database_get_macs(route):	
+#returns a list of the latest information for all the vehicles found	
+def database_get_latest_vehicle(route,age):	
 	rows = []
-	for line in route.split(","):
-		database.execute("SELECT DISTINCT mac, '"+line+"' FROM log WHERE route LIKE ?", (line,))
-		rows = rows + database.fetchall()
+	count = 0
+	
+	database.execute("SELECT DISTINCT vehicle_id FROM vehicle;")
+	for vehicleid in database.fetchall():
+		database.execute("SELECT * FROM vehicle WHERE vehicle_id = ? ORDER BY timestamp DESC LIMIT ?;",(vehicleid[0],age,))
+		temp = database.fetchall()
+		
+		#gets the last row in the list
+		rows.append(temp[-1])
 	return rows
 
 def database_get_ssid():	
@@ -83,7 +89,7 @@ def database_get_ssid():
 
 #prints a list of all routes found	
 def database_get_routes():	
-	database.execute("SELECT DISTINCT route FROM log")
+	database.execute("SELECT DISTINCT vehicle_route FROM vehicle")
 	for route in database.fetchall():
 		print route[0]
 	return 

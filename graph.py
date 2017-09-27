@@ -8,7 +8,7 @@
 #sets the about of random 'shake' in the drawing
 shake_amount 		= 44
 #sets the bg color
-background_color 	= 'white'
+background_color 	= 'black'
 #default color table
 color_table = 'orange'
 
@@ -20,11 +20,12 @@ color_table_green = ['#008445','#12824d','#258155','#38815e','#4f7f68','#5f7e6f'
 
 
 import matplotlib.pyplot as plt
-from wt_database import database_get_macs
-from wt_database import database_search_mac
+from database import database_get_latest_vehicle
 import os
 import time
 import random, sys,  getopt
+import numpy as np
+from matplotlib.animation import FuncAnimation
 
 lat 	= []
 lon 	= []
@@ -33,6 +34,10 @@ rssi 	= []
 shake 	= 0
 shake2	= 0
 route 	= ''
+
+fig, ax = plt.subplots()
+fig.set_tight_layout(True)
+plots = ax.scatter(0,0)
 
 
 #parse out our command line arguments
@@ -104,6 +109,25 @@ def get_line_width(rssi):
 		
 	return line_width
 
+def update(age):
+
+	global plots
+	lat = []
+	lon = []
+	#get a list of all seen macs
+	for vehicle in database_get_latest_vehicle(route,age):
+
+		#get all the log entries for a single mac
+		lat.append(vehicle[6])
+		lon.append(vehicle[7])
+		print "PLOTTING - Vehicle ID: ",vehicle[2]
+	plots.remove()		
+	#take the lat and long lists and plot them
+	plots = ax.scatter(lat, lon, color = '#305e90', alpha = 0.5)
+	
+	print "LOOP: ",age
+	return plots
+
 if __name__ == "__main__":
 	#parse the arguments
 	parse_arg(sys.argv[1:])
@@ -117,35 +141,26 @@ if __name__ == "__main__":
 	print "Route set to:",route,"\tColor set to:",color_table
 
 
-	#get a list of all seen macs
-	for mac in database_get_macs(route):
-
-		#get two random numbers to 'shake' the plot line
-		shake = random.randrange(1,shake_amount) * .0001
-		shake2 = random.randrange(1,shake_amount) * .0001
+	anim = FuncAnimation(fig, update, frames=np.arange(1, 333), interval=50)
+	#plt.show()
 	
-		#get all the log entries for a single mac
-		for line in database_search_mac(mac[0],mac[1]):
-			lat.append(float(line[4])+shake)
-			lon.append(float(line[5])+shake2)
-			rssi.append(int(line[3]))
-			
-		#take the lat and long lists and plot them
-		plt.plot(lon, lat, color = get_line_color(rssi), lw = get_line_width(rssi), alpha = 0.5)
-		print "PLOTTING - MAC Address:",str(mac[0]),"Route:",str(mac[1])
-
-		lat = []
-		lon = []
-		rssi = []
-
-	print "Total MACs seen:",len(database_get_macs(route)),"\tRoute set to:",route,"\tColor set to:",color_table
-
 	#create the graph and save
 	timestamp = int(time.time())
-	filename = 'output/wifi_tracks_' + str(timestamp) +'.png'
-	plt.savefig(filename, facecolor = fig.get_facecolor(), bbox_inches='tight', pad_inches=0, dpi=3000)
-
+	filename = 'output/wifi_tracks_' + str(timestamp) +'.gif'
+	anim.save(filename, dpi=80, writer='imagemagick')
+	
+	print "Route set to:",route,"\tColor set to:",color_table
+	
 	#opens the file we just created in the os default program
 	print "Opening File..."
 	os.system("open "+filename)
+
+	#create the graph and save
+	#timestamp = int(time.time())
+	#filename = 'output/wifi_tracks_' + str(timestamp) +'.png'
+	#plt.savefig(filename, facecolor = fig.get_facecolor(), bbox_inches='tight', pad_inches=0, dpi=1000)
+
+	#opens the file we just created in the os default program
+	#print "Opening File..."
+	#os.system("open "+filename)
 
