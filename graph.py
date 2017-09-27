@@ -123,7 +123,7 @@ def update(age):
 		print "PLOTTING - Vehicle ID: ",vehicle[2]
 	plots.remove()		
 	#take the lat and long lists and plot them
-	plots = ax.scatter(lat, lon, color = '#305e90', alpha = 0.5)
+	plots = ax.scatter(lon, lat, color = '#305e90', alpha = 0.5)
 	
 	print "LOOP: ",age
 	return plots
@@ -141,7 +141,7 @@ if __name__ == "__main__":
 	print "Route set to:",route,"\tColor set to:",color_table
 
 
-	anim = FuncAnimation(fig, update, frames=np.arange(1, 333), interval=50)
+	anim = FuncAnimation(fig, update, frames=np.arange(1, 333), interval=40)
 	#plt.show()
 	
 	#create the graph and save

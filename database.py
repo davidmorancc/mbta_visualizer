@@ -73,14 +73,13 @@ def database_search_location(route):
 def database_get_latest_vehicle(route,age):	
 	rows = []
 	count = 0
-	
-	database.execute("SELECT DISTINCT vehicle_id FROM vehicle;")
-	for vehicleid in database.fetchall():
-		database.execute("SELECT * FROM vehicle WHERE vehicle_id = ? ORDER BY timestamp DESC LIMIT ?;",(vehicleid[0],age,))
-		temp = database.fetchall()
-		
-		#gets the last row in the list
-		rows.append(temp[-1])
+	for line in route.split(","):
+		database.execute("SELECT DISTINCT vehicle_id FROM vehicle WHERE vehicle_route = ?;",(line,))
+		for vehicleid in database.fetchall():
+			database.execute("SELECT * FROM vehicle WHERE vehicle_id = ? ORDER BY timestamp DESC LIMIT ?;",(vehicleid[0],age,))
+			temp = database.fetchall()
+			#gets the last row in the list
+			rows.append(temp[-1])
 	return rows
 
 def database_get_ssid():	
