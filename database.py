@@ -8,22 +8,27 @@
 
 import sqlite3
 import sys
+import time
 
-connection = sqlite3.connect('db/log.db')
+connection = sqlite3.connect('db/data.db')
 database = connection.cursor()
 
 #function to create a new database and setup the tables
 def database_create():	
 	#create our table
-	database.execute('''CREATE TABLE `log` (
-	`route`	TEXT,
-	`mac`	TEXT,
-	`ssid`	TEXT,
-	`rssi`	TEXT,
-	`lat`	TEXT,
-	`long`	TEXT,
-	`alt`	TEXT,
-	`time`	TEXT
+	database.execute('''CREATE TABLE `vehicle` (
+	`id`					INTEGER PRIMARY KEY AUTOINCREMENT,
+	`timestamp`				INTEGER,
+	`vehicle_id`			TEXT,
+	`vehicle_name`			TEXT,
+	`vehicle_route`			TEXT,
+	`vehicle_direction`		INTEGER,
+	`vehicle_lat`			REAL,
+	`vehicle_lon`			REAL,
+	`vehicle_bearing`		INTEGER,
+	`vehicle_timestamp`		INTEGER,
+	`vehicle_trip_start`	INTEGER,
+	`vehicle_trip_id`		INTEGER
 	);''')
 	
 	#go ahead commit the database
@@ -32,19 +37,19 @@ def database_create():
 	print "Created new database and commited"
 	
 	return
-
+	
 #function to empty the database
 def database_empty():
-	database.execute("DELETE FROM log")
+	database.execute("DELETE FROM vehicle")
 	database.execute("VACUUM")
 	connection.commit()
 	
 	print "Cleared database and commited"
 	return
 
-#route, mac, ssid, rssi, timestamp, lat, long, alt
-def database_insert(route, mac,ssid,rssi,lat,long,alt,time):
-	database.execute("INSERT INTO log (route, mac,ssid,rssi,lat,long,alt,time) VALUES (?,?,?,?,?,?,?,?)", (route, mac, ssid, rssi, lat, long, alt, time))
+#vehicle_id, vehicle_name, vehicle_route, vehicle_direction, vehicle_lat, vehicle_lon, vehicle_bearing, vehicle_timestamp, vehicle_trip_start, vehicle_trip_id
+def database_insert(vehicle_id, vehicle_name, vehicle_route, vehicle_direction, vehicle_lat, vehicle_lon, vehicle_bearing, vehicle_timestamp, vehicle_trip_start, vehicle_trip_id):
+	database.execute("INSERT INTO vehicle (timestamp, vehicle_id, vehicle_name, vehicle_route, vehicle_direction, vehicle_lat,	vehicle_lon, vehicle_bearing, vehicle_timestamp, vehicle_trip_start, vehicle_trip_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)", (time.time(), vehicle_id, vehicle_name, vehicle_route, vehicle_direction, vehicle_lat,vehicle_lon, vehicle_bearing, vehicle_timestamp, vehicle_trip_start, vehicle_trip_id))
 	return
 	
 #commit and close the database	
@@ -99,10 +104,6 @@ if __name__ == "__main__":
 			database_create()
 		if arg == "empty":
 			database_empty()
-		if arg == "routes":
-			database_get_routes()
-		if arg == "ssids":
-			print "Total SSIDs:", database_get_ssid()
 	database_close()
 
 
